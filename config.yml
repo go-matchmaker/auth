@@ -1,0 +1,26 @@
+app:
+  name: "auth-service"
+
+log:
+  level: 2
+
+token:
+  token_ttl: 30m
+  refresh_ttl: 15m
+
+http:
+  host: "0.0.0.0"
+  port: 8001
+
+psql:
+  url: "postgres://postgres:pass@localhost:5432/auth"
+
+mongo:
+  url: "mongodb://localhost:27017"
+  db_name: "template"
+  user_collection: "users"
+
+settings:
+  server_read_timeout: 5
+  db_conn_attempts: 5
+  db_conn_timeout: 2

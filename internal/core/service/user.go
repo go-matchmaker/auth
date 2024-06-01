@@ -8,7 +8,8 @@ import (
 	"auth/internal/core/util"
 	"context"
 	"errors"
-	"github.com/google/uuid"
+	"fmt"
+
 	"github.com/google/wire"
 )
 
@@ -29,30 +30,24 @@ func NewUserService(userRepo user.UserRepositoryPort, token auth.TokenMaker) use
 	}
 }
 
-func (us *UserService) Register(ctx context.Context, userModel *entity.User) (*uuid.UUID, error) {
-	id, err := us.userRepo.Insert(ctx, userModel)
+func (us *UserService) Login(ctx context.Context, email, password string) (*aggregate.UserAccess, error) {
+	userPassword, err := us.userRepo.GetUserPassword(ctx, email)
 	if err != nil {
 		return nil, err
 	}
-
-	return id, nil
-}
-
-func (us *UserService) Login(ctx context.Context, email, password, ip string) (*aggregate.UserAcess, error) {
-	userModel, err := us.userRepo.GetByEmail(ctx, email)
-	sessionModel := new(aggregate.UserAcess)
-	if err != nil {
-		return nil, errors.New("user not found")
-	}
-
-	err = util.ComparePassword(password, userModel.PasswordHash)
+	fmt.Println("userPassword", userPassword)
+	err = util.ComparePassword(password, userPassword)
 	if err != nil {
 		return nil, errors.New("password not match")
 	}
-
-	// We will take it from db later.
-	isBlocked := false
-	accessToken, publicKey, accessPayload, err := us.token.CreateToken(userModel.ID, userModel.Email, string(userModel.Role), isBlocked)
+	fmt.Println("password match")
+	user, err := us.userRepo.GetByEmail(ctx, email)
+	fmt.Println("user", user)
+	fmt.Println("err", err)
+	if err != nil {
+		return nil, err
+	}
+	accessToken, publicKey, accessPayload, err := us.token.CreateToken(user.ID, user.Email, string(user.Role), false)
 	if err != nil {
 		return nil, err
 	}
@@ -61,16 +56,16 @@ func (us *UserService) Login(ctx context.Context, email, password, ip string) (*
 		return nil, err
 	}
 
-	sessionModel = aggregate.NewUserAcess(&userModel, refreshPayload, accessToken, publicKey, refreshToken, refreshPublicKey, ip)
+	sessionModel := aggregate.NewUserAccess(user, refreshPayload, accessToken, publicKey, refreshToken, refreshPublicKey)
 
 	return sessionModel, nil
 }
 
-func (us *UserService) UserSelfInfo(ctx context.Context, email string) (entity.User, error) {
-	userUpdate, err := us.userRepo.GetByEmail(ctx, email)
+func (us *UserService) GetUser(ctx context.Context, id string) (*entity.User, error) {
+	user, err := us.userRepo.GetByID(ctx, id)
 	if err != nil {
-		return entity.User{}, err
+		return nil, err
 	}
 
-	return userUpdate, nil
+	return user, nil
 }

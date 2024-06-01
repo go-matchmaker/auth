@@ -24,3 +24,21 @@ settings:
   server_read_timeout: 5
   db_conn_attempts: 5
   db_conn_timeout: 2
+
+attributes: Vehicle Management
+  Hotel Management
+  Ticket Management
+  Human Resources
+  IT
+  Accounting
+  Customer Relationships
+
+permissions: View
+  Search
+  Detail
+  Add
+  Update
+  Delete
+  Export
+  Import
+  Can See Price

@@ -7,9 +7,9 @@ func (s *server) SetupRouter() {
 
 func (s *server) authRouter() {
 	route := s.app.Group("/auth")
-	route.Post("/register", s.RegisterUser, s.registerValidate)
 	route.Post("/login", s.Login, s.loginValidate)
-	route.Get("/self-info", s.SelfInfo, s.IsAuthorized)
+	route.Get("/get-me", s.GetMe, s.IsAuthorized)
+	route.Get("/get-user/:id", s.GetUser, s.IsAuthorized)
 }
 
 func (s *server) webSetUp() {

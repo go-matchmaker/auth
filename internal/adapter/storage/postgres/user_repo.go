@@ -5,10 +5,11 @@ import (
 	"auth/internal/core/port/db"
 	"auth/internal/core/port/user"
 	"context"
-	"github.com/google/uuid"
+	"fmt"
+	"time"
+
 	"github.com/google/wire"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"time"
 )
 
 var (
@@ -26,109 +27,126 @@ func NewUserRepository(em db.PostgresEngineMaker) user.UserRepositoryPort {
 	}
 }
 
-func (r *UserRepository) Insert(ctx context.Context, userModel *entity.User) (*uuid.UUID, error) {
-	id, err := uuid.NewV7()
-	if err != nil {
-		return nil, err
-	}
-	userModel.ID = id
-	query := `INSERT INTO users (id, role, name, surname, email, phone_number, password_hash, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, role, name, surname, email, phone_number, password_hash, created_at, updated_at`
-	queryRow := r.dbPool.QueryRow(ctx, query, userModel.ID, userModel.Role, userModel.Name, userModel.Surname, userModel.Email, userModel.PhoneNumber, userModel.PasswordHash, userModel.CreatedAt, userModel.UpdatedAt)
-	err = queryRow.Scan(&userModel.ID, &userModel.Role, &userModel.Name, &userModel.Surname, &userModel.Email, &userModel.PhoneNumber, &userModel.PasswordHash, &userModel.CreatedAt, &userModel.UpdatedAt)
-	if err != nil {
-		return nil, err
-	}
-	return &id, nil
-}
-
-func (r *UserRepository) Update(ctx context.Context, userModel *entity.User) (*entity.User, error) {
-	query := `
-        UPDATE users
-        SET
-            name = COALESCE($1, name),
-            surname = COALESCE($2, surname),
-			role = COALESCE($3, role),
-            email = COALESCE($4, email),
-            phone_number = COALESCE($5, phone_number),
-            password_hash = COALESCE($6, password_hash),
-            updated_at = COALESCE($7, updated_at)
-        WHERE
-            id = $8
-        RETURNING *
-    `
-
-	queryRow := r.dbPool.QueryRow(ctx, query, userModel.Name, userModel.Surname, userModel.Role, userModel.Email, userModel.PhoneNumber, userModel.PasswordHash, userModel.UpdatedAt, userModel.ID)
-
-	updatedUser := new(entity.User)
-	err := queryRow.Scan(&updatedUser.ID, &updatedUser.Role, &updatedUser.Name, &updatedUser.Surname, &updatedUser.Email, &updatedUser.PhoneNumber, &updatedUser.PasswordHash, &updatedUser.CreatedAt, &updatedUser.UpdatedAt)
-	if err != nil {
-		return nil, err
-	}
-
-	return updatedUser, nil
-}
-
-func (r *UserRepository) UpdatePassword(ctx context.Context, id uuid.UUID, password string) (*entity.User, error) {
-	query := `
-		UPDATE users
-		SET
-			password_hash = $1,
-			updated_at = $2
-		WHERE
-			id = $3
-		RETURNING *
-	`
-
-	queryRow := r.dbPool.QueryRow(ctx, query, password, time.Now(), id)
-
-	updatedUser := new(entity.User)
-	err := queryRow.Scan(&updatedUser.ID, &updatedUser.Role, &updatedUser.Name, &updatedUser.Surname, &updatedUser.Email, &updatedUser.PhoneNumber, &updatedUser.PasswordHash, &updatedUser.CreatedAt, &updatedUser.UpdatedAt)
-	if err != nil {
-		return nil, err
-	}
-
-	return updatedUser, nil
-}
-
-func (r *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (entity.User, error) {
-	query := `SELECT id, role, name, surname, email, phone_number, password_hash, created_at, updated_at FROM users WHERE id = $1 LIMIT 1`
+func (r *UserRepository) GetByID(ctx context.Context, id string) (*entity.User, error) {
+	query := `SELECT 
+	u.id AS user_id,
+	u.role,
+	u.name,
+	u.surname,
+	u.email,
+	u.phone_number,
+	u.created_at AS user_created_at,
+	u.updated_at AS user_updated_at,
+	d.id AS department_id,
+	d.name AS department_name,
+	d.created_at AS department_created_at,
+	d.updated_at AS department_updated_at,
+	a.id AS attribute_id,
+	a.name AS attribute_name,
+	p.view,
+	p.search,
+	p.detail,
+	p.add,
+	p.update,
+	p.delete,
+	p.export,
+	p.import,
+	p.can_see_price,
+	p.created_at AS permission_created_at,
+	p.updated_at AS permission_updated_at
+    FROM 
+	users u
+    LEFT JOIN 
+	permissions p ON u.id = p.user_id
+    LEFT JOIN 
+	attributes a ON p.attribute_id = a.id
+    LEFT JOIN 
+	departments d ON a.department_id = d.id
+    WHERE 
+	u.id = $1;`
 	queryRow := r.dbPool.QueryRow(ctx, query, id)
 	userM := new(entity.User)
-	err := queryRow.Scan(&userM.ID, &userM.Role, &userM.Name, &userM.Surname, &userM.Email, &userM.PhoneNumber, &userM.PasswordHash, &userM.CreatedAt, &userM.UpdatedAt)
+	err := queryRow.Scan(&userM.ID, &userM.Role, &userM.Name, &userM.Surname, &userM.Email, &userM.PhoneNumber, &userM.Password, &userM.CreatedAt, &userM.UpdatedAt)
 	if err != nil {
-		return entity.User{}, err
+		return nil, err
 	}
 
-	return *userM, nil
-
+	return userM, nil
 }
 
-func (r *UserRepository) GetByEmail(ctx context.Context, email string) (entity.User, error) {
-	query := `SELECT id, role, name, surname, email, phone_number, password_hash, created_at, updated_at FROM users WHERE email = $1 LIMIT 1`
+func (r *UserRepository) GetByEmail(ctx context.Context, id string) (*entity.User, error) {
+	const query = `SELECT 
+	u.id, u.role, u.name, u.surname, u.email, u.phone_number, u.password, u.created_at, u.updated_at,
+	d.id AS department_id, d.name AS department_name, d.created_at AS department_created_at,
+	ua.attribute, ua.view, ua.search, ua.detail, ua.add, ua.update, ua.delete, ua.export, ua.upload, ua.can_see_price
+    FROM users u
+    JOIN departments d ON u.department_id = d.id
+    LEFT JOIN user_attributes ua ON u.id = ua.user_id
+    WHERE u.email = $1;
+    `
+
+	queryRows, err := r.dbPool.Query(ctx, query, id)
+	if err != nil {
+		return nil, err
+	}
+	var user entity.User
+	user.UserPermissions = make(map[string]entity.Permission)
+
+	for queryRows.Next() {
+		var (
+			role                                                                              entity.Role
+			departmentID, departmentName, userID, name, surname, email, phoneNumber, password string
+			createdAt, updatedAt, departmentCreatedAt                                         time.Time
+			attribute                                                                         string
+			view, search, detail, add, update, delete, export, upload, canSeePrice            bool
+		)
+
+		err := queryRows.Scan(
+			&userID, &role, &name, &surname, &email, &phoneNumber, &password, &createdAt, &updatedAt,
+			&departmentID, &departmentName, &departmentCreatedAt,
+			&attribute, &view, &search, &detail, &add, &update, &delete, &export, &upload, &canSeePrice,
+		)
+		if err != nil {
+			return &entity.User{}, err
+		}
+
+		user.ID = userID
+		user.Role = role
+		user.Name = name
+		user.Surname = surname
+		user.Email = email
+		user.PhoneNumber = phoneNumber
+		user.Password = password
+		user.CreatedAt = createdAt
+		user.UpdatedAt = updatedAt
+		user.Department = entity.Department{
+			ID:        departmentID,
+			Name:      departmentName,
+			CreatedAt: departmentCreatedAt,
+		}
+		user.UserPermissions[attribute] = entity.Permission{
+			View:        view,
+			Search:      search,
+			Detail:      detail,
+			Add:         add,
+			Update:      update,
+			Delete:      delete,
+			Export:      export,
+			Import:      upload,
+			CanSeePrice: canSeePrice,
+		}
+	}
+	fmt.Println("user1", user)
+	return &user, nil
+}
+
+func (r *UserRepository) GetUserPassword(ctx context.Context, email string) (string, error) {
+	query := `SELECT password FROM users where email = $1`
 	queryRow := r.dbPool.QueryRow(ctx, query, email)
-	userM := new(entity.User)
-	err := queryRow.Scan(&userM.ID, &userM.Role, &userM.Name, &userM.Surname, &userM.Email, &userM.PhoneNumber, &userM.PasswordHash, &userM.CreatedAt, &userM.UpdatedAt)
+	password := ""
+	err := queryRow.Scan(&password)
 	if err != nil {
-		return entity.User{}, err
+		return "", err
 	}
-
-	return *userM, nil
-}
-
-func (r *UserRepository) DeleteOne(ctx context.Context, id uuid.UUID) error {
-	query := `DELETE FROM users WHERE id = $1`
-	_, err := r.dbPool.Exec(ctx, query, id)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (r *UserRepository) DeleteAll(ctx context.Context) error {
-	query := `DELETE FROM users`
-	_, err := r.dbPool.Exec(ctx, query)
-	if err != nil {
-		return err
-	}
-	return nil
+	return password, nil
 }

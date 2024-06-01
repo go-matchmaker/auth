@@ -5,20 +5,16 @@ log:
   level: 2
 
 token:
-  token_ttl: 30m
-  refresh_ttl: 15m
+  token_ttl: 60m
+  refresh_ttl: 120m
 
 http:
   host: "0.0.0.0"
   port: 8001
 
 psql:
-  url: "postgres://postgres:pass@localhost:5432/auth"
+  url: "postgres://postgres:pass@localhost:5432/crm?sslmode=disable&options=-c%20default_transaction_read_only=on"
 
-mongo:
-  url: "mongodb://localhost:27017"
-  db_name: "template"
-  user_collection: "users"
 
 settings:
   server_read_timeout: 5

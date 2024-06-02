@@ -7,7 +7,7 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: auth
+      POSTGRES_DB: crm
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: pass
     healthcheck:
@@ -18,7 +18,7 @@ services:
     networks:
       - common-network
 
-  auth:
+  crm:
     build:
       context: .
       dockerfile: Dockerfile

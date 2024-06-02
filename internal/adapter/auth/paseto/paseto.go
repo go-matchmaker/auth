@@ -45,8 +45,6 @@ func (pt *PasetoToken) CreateToken(id string, email, role string, isBlocked bool
 	tokenPaseto.SetExpiration(payload.ExpiredAt)
 	tokenPaseto.SetIssuedAt(payload.IssuedAt)
 	tokenPaseto.SetString("id", payload.ID)
-	tokenPaseto.SetString("role", payload.Role)
-	tokenPaseto.SetString("email", payload.Email)
 	secretKey := paseto.NewV4AsymmetricSecretKey()
 	publicKey := secretKey.Public().ExportHex()
 	encrypted := tokenPaseto.V4Sign(secretKey, nil)
@@ -61,8 +59,6 @@ func (pt *PasetoToken) CreateRefreshToken(payload *valueobject.Payload) (string,
 	tokenPaseto.SetExpiration(payload.ExpiredAt)
 	tokenPaseto.SetIssuedAt(payload.IssuedAt)
 	tokenPaseto.SetString("id", payload.ID)
-	tokenPaseto.SetString("role", payload.Role)
-	tokenPaseto.SetString("email", payload.Email)
 
 	secretKey := paseto.NewV4AsymmetricSecretKey()
 	publicKey := secretKey.Public().ExportHex()
@@ -101,19 +97,9 @@ func (pt *PasetoToken) DecodeToken(pasetoToken, publicKeyHex string) (*valueobje
 	if err != nil {
 		return nil, err
 	}
-	email, err := parsedToken.GetString("email")
-	if err != nil {
-		return nil, err
-	}
-	role, err := parsedToken.GetString("role")
-	if err != nil {
-		return nil, err
-	}
 
 	payload = &valueobject.Payload{
 		ID:        id,
-		Role:      role,
-		Email:     email,
 		IssuedAt:  issuedAt,
 		ExpiredAt: expiredAt,
 	}

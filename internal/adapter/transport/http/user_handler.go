@@ -1,6 +1,7 @@
 package http
 
 import (
+	"auth/internal/core/domain/valueobject"
 	"auth/internal/dto"
 
 	"github.com/goccy/go-json"
@@ -24,15 +25,14 @@ func (s *server) Login(c fiber.Ctx) error {
 }
 
 func (s *server) GetMe(c fiber.Ctx) error {
-	return nil
-	// userID := c.Locals("user").(*valueobject.UserClaims).UserID
-	// userData, err := s.userService.GetMe(c.Context(), userID)
-	// if err != nil {
-	// 	return s.errorResponse(c, "error while trying to get user data", err, nil, fiber.StatusBadRequest)
-	// }
-
-	// userResponse := dto.NewUserResponse(userData)
-	// return s.successResponse(c, userResponse, "user data fetched successfully", fiber.StatusOK)
+	payload := c.Locals("Payload").(*valueobject.Payload)
+	userID := payload.ID
+	userData, err := s.userService.GetUser(c.Context(), userID)
+	if err != nil {
+		return s.errorResponse(c, "error while trying to get user data", err, nil, fiber.StatusBadRequest)
+	}
+	userResponse := dto.NewUserResponse(userData)
+	return s.successResponse(c, userResponse, "user data fetched successfully", fiber.StatusOK)
 }
 
 func (s *server) GetUser(c fiber.Ctx) error {

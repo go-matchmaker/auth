@@ -60,5 +60,6 @@ func NewUserResponse(userData *entity.User) *GetUserRequestResponse {
 		PhoneNumber: userData.PhoneNumber,
 		Role:        string(userData.Role),
 		CreatedAt:   userData.CreatedAt,
+		Attributes:  userData.UserPermissions,
 	}
 }

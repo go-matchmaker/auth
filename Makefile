@@ -8,7 +8,7 @@ GRPC_GATEWAY_PLUGIN := protoc-gen-grpc-auth
 PROTOC_OPTS := -I$(PROTO_DIR) --go_out=$(PB_DIR) --go_opt=paths=source_relative --go-grpc_out=$(PB_DIR) --go-grpc_opt=paths=source_relative
 
 MIGRATION_FOLDER := internal/adapter/storage/postgres/migration
-DB_URL := postgresql://postgres:pass@localhost:5432/auth?sslmode=disable
+DB_URL := postgresql://postgres:pass@localhost:5432/crm?sslmode=disable
 # ==================================================================================== #
 # DB
 # ==================================================================================== #

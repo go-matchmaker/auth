@@ -1,10 +1,10 @@
 package http
 
 import (
-	"auth/internal/core/domain/valueobject"
 	"errors"
-	"github.com/gofiber/fiber/v3"
 	"strings"
+
+	"github.com/gofiber/fiber/v3"
 )
 
 const (
@@ -40,18 +40,5 @@ func (s *server) IsAuthorized(c fiber.Ctx) error {
 	}
 
 	c.Locals(AuthPayload, payload)
-	return c.Next()
-}
-
-func (s *server) IsAdmin(c fiber.Ctx) error {
-	role, ok := c.Locals(AuthPayload).(*valueobject.Payload)
-	if !ok {
-		return s.errorResponse(c, "payload not found in context", errors.New("payload not found in context"), nil, fiber.StatusUnauthorized)
-	}
-
-	if role.Role != "admin" {
-		return s.errorResponse(c, "unauthorized", errors.New("unauthorized"), nil, fiber.StatusUnauthorized)
-	}
-
 	return c.Next()
 }

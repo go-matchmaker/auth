@@ -1,6 +1,9 @@
 package http
 
 import (
+	"auth/internal/converter"
+	"auth/internal/core/domain/aggregate"
+	"auth/internal/core/domain/entity"
 	"auth/internal/core/domain/valueobject"
 	"auth/internal/dto"
 
@@ -20,28 +23,27 @@ func (s *server) Login(c fiber.Ctx) error {
 		return s.errorResponse(c, "error while trying to login", err, nil, fiber.StatusBadRequest)
 	}
 
-	userResponse := dto.NewUserLoginRequestResponse(userData)
+	userResponse := converter.UserLoginModelToDto(userData)
 	return s.successResponse(c, userResponse, "user logged in successfully", fiber.StatusOK)
 }
 
 func (s *server) GetMe(c fiber.Ctx) error {
-	payload := c.Locals("Payload").(*valueobject.Payload)
-	userID := payload.ID
-	userData, err := s.userService.GetUser(c.Context(), userID)
-	if err != nil {
-		return s.errorResponse(c, "error while trying to get user data", err, nil, fiber.StatusBadRequest)
-	}
-	userResponse := dto.NewUserResponse(userData)
-	return s.successResponse(c, userResponse, "user data fetched successfully", fiber.StatusOK)
-}
-
-func (s *server) GetUser(c fiber.Ctx) error {
-	userID := c.Params("id")
-	userData, err := s.userService.GetUser(c.Context(), userID)
-	if err != nil {
-		return s.errorResponse(c, "error while trying to get user data", err, nil, fiber.StatusBadRequest)
+	payload := c.Locals(AuthPayload).(*valueobject.Payload)
+	userData := &entity.User{
+		ID:          payload.ID,
+		Email:       payload.Email,
+		Name:        payload.Name,
+		Surname:     payload.Surname,
+		Role:        entity.Role(payload.Role),
+		PhoneNumber: payload.PhoneNumber,
+		CreatedAt:   payload.CreatedAt,
 	}
 
-	userResponse := dto.NewUserResponse(userData)
+	department := &entity.Department{
+		ID: payload.DepartmentID,
+	}
+
+	userAggregate := aggregate.NewUserAggregate(userData, department, payload.Attributes)
+	userResponse := converter.GetUserModelToDto(userAggregate)
 	return s.successResponse(c, userResponse, "user data fetched successfully", fiber.StatusOK)
 }

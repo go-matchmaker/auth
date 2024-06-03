@@ -1,11 +1,11 @@
 package psql
 
 import (
+	"auth/internal/core/domain/aggregate"
 	"auth/internal/core/domain/entity"
 	"auth/internal/core/port/db"
 	"auth/internal/core/port/user"
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/google/wire"
@@ -27,7 +27,7 @@ func NewUserRepository(em db.PostgresEngineMaker) user.UserRepositoryPort {
 	}
 }
 
-func (r *UserRepository) GetByID(ctx context.Context, id string) (*entity.User, error) {
+func (r *UserRepository) GetByID(ctx context.Context, id string) (*aggregate.UserAggregate, error) {
 	const query = `SELECT 
 	u.id, u.role, u.name, u.surname, u.email, u.phone_number, u.password, u.created_at, u.updated_at,
 	d.id AS department_id, d.name AS department_name, d.created_at AS department_created_at,
@@ -41,8 +41,8 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*entity.User, 
 	if err != nil {
 		return nil, err
 	}
-	var user entity.User
-	user.UserPermissions = make(map[string]entity.Permission)
+	var userModel *aggregate.UserAggregate
+	userModel.Permissions = make(map[string]*entity.Permission)
 
 	for queryRows.Next() {
 		var (
@@ -59,24 +59,24 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*entity.User, 
 			&attribute, &view, &search, &detail, &add, &update, &delete, &export, &upload, &canSeePrice,
 		)
 		if err != nil {
-			return &entity.User{}, err
+			return nil, err
 		}
 
-		user.ID = userID
-		user.Role = role
-		user.Name = name
-		user.Surname = surname
-		user.Email = email
-		user.PhoneNumber = phoneNumber
-		user.Password = password
-		user.CreatedAt = createdAt
-		user.UpdatedAt = updatedAt
-		user.Department = entity.Department{
+		userModel.User.ID = userID
+		userModel.User.Role = role
+		userModel.User.Name = name
+		userModel.User.Surname = surname
+		userModel.User.Email = email
+		userModel.User.PhoneNumber = phoneNumber
+		userModel.User.Password = password
+		userModel.User.CreatedAt = createdAt
+		userModel.User.UpdatedAt = updatedAt
+		userModel.Department = &entity.Department{
 			ID:        departmentID,
 			Name:      departmentName,
 			CreatedAt: departmentCreatedAt,
 		}
-		user.UserPermissions[attribute] = entity.Permission{
+		userModel.Permissions[attribute] = &entity.Permission{
 			View:        view,
 			Search:      search,
 			Detail:      detail,
@@ -88,10 +88,10 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*entity.User, 
 			CanSeePrice: canSeePrice,
 		}
 	}
-	return &user, nil
+	return userModel, nil
 }
 
-func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*entity.User, error) {
+func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*aggregate.UserAggregate, error) {
 	const query = `SELECT 
 	u.id, u.role, u.name, u.surname, u.email, u.phone_number, u.password, u.created_at, u.updated_at,
 	d.id AS department_id, d.name AS department_name, d.created_at AS department_created_at,
@@ -106,8 +106,8 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*entity.
 	if err != nil {
 		return nil, err
 	}
-	var user entity.User
-	user.UserPermissions = make(map[string]entity.Permission)
+	var userModel *aggregate.UserAggregate
+	userModel.Permissions = make(map[string]*entity.Permission)
 
 	for queryRows.Next() {
 		var (
@@ -124,24 +124,24 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*entity.
 			&attribute, &view, &search, &detail, &add, &update, &delete, &export, &upload, &canSeePrice,
 		)
 		if err != nil {
-			return &entity.User{}, err
+			return nil, err
 		}
 
-		user.ID = userID
-		user.Role = role
-		user.Name = name
-		user.Surname = surname
-		user.Email = email
-		user.PhoneNumber = phoneNumber
-		user.Password = password
-		user.CreatedAt = createdAt
-		user.UpdatedAt = updatedAt
-		user.Department = entity.Department{
+		userModel.User.ID = userID
+		userModel.User.Role = role
+		userModel.User.Name = name
+		userModel.User.Surname = surname
+		userModel.User.Email = email
+		userModel.User.PhoneNumber = phoneNumber
+		userModel.User.Password = password
+		userModel.User.CreatedAt = createdAt
+		userModel.User.UpdatedAt = updatedAt
+		userModel.Department = &entity.Department{
 			ID:        departmentID,
 			Name:      departmentName,
 			CreatedAt: departmentCreatedAt,
 		}
-		user.UserPermissions[attribute] = entity.Permission{
+		userModel.Permissions[attribute] = &entity.Permission{
 			View:        view,
 			Search:      search,
 			Detail:      detail,
@@ -153,8 +153,7 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*entity.
 			CanSeePrice: canSeePrice,
 		}
 	}
-	fmt.Println("user1", user)
-	return &user, nil
+	return userModel, nil
 }
 
 func (r *UserRepository) GetUserPassword(ctx context.Context, email string) (string, error) {

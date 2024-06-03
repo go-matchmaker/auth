@@ -2,7 +2,6 @@ package service
 
 import (
 	"auth/internal/core/domain/aggregate"
-	"auth/internal/core/domain/entity"
 	"auth/internal/core/port/auth"
 	"auth/internal/core/port/user"
 	"auth/internal/core/util"
@@ -41,31 +40,29 @@ func (us *UserService) Login(ctx context.Context, email, password string) (*aggr
 		return nil, errors.New("password not match")
 	}
 	fmt.Println("password match")
-	user, err := us.userRepo.GetByEmail(ctx, email)
-	fmt.Println("user", user)
-	fmt.Println("err", err)
+	userModel, err := us.userRepo.GetByEmail(ctx, email)
 	if err != nil {
 		return nil, err
 	}
-	accessToken, publicKey, accessPayload, err := us.token.CreateToken(user.ID, user.Email, string(user.Role), false)
+	accessToken, publicKey, accessPayload, err := us.token.CreateToken(userModel.User.ID, userModel.User.Name, userModel.User.Surname, userModel.User.Email, string(userModel.User.Role), userModel.User.PhoneNumber, userModel.Department.ID, userModel.User.CreatedAt, userModel.Permissions)
 	if err != nil {
 		return nil, err
 	}
-	refreshToken, refreshPublicKey, refreshPayload, err := us.token.CreateRefreshToken(accessPayload)
+	refreshToken, refreshPublicKey, err := us.token.CreateRefreshToken(accessPayload)
 	if err != nil {
 		return nil, err
 	}
 
-	sessionModel := aggregate.NewUserAccess(user, refreshPayload, accessToken, publicKey, refreshToken, refreshPublicKey)
+	sessionModel := aggregate.NewUserAccess(userModel.User, accessToken, publicKey, refreshToken, refreshPublicKey)
 
 	return sessionModel, nil
 }
 
-func (us *UserService) GetUser(ctx context.Context, id string) (*entity.User, error) {
-	user, err := us.userRepo.GetByID(ctx, id)
+func (us *UserService) GetUser(ctx context.Context, id string) (*aggregate.UserAggregate, error) {
+	userModel, err := us.userRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	return user, nil
+	return userModel, nil
 }

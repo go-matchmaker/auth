@@ -16,17 +16,15 @@ var (
 )
 
 type User struct {
-	ID              string                `json:"id"`
-	Role            Role                  `json:"role"`
-	Name            string                `json:"name"`
-	Surname         string                `json:"surname"`
-	Email           string                `json:"email"`
-	PhoneNumber     string                `json:"phone_number"`
-	Password        string                `json:"password"`
-	CreatedAt       time.Time             `json:"created_at"`
-	UpdatedAt       time.Time             `json:"updated_at"`
-	Department      Department            `json:"department"`
-	UserPermissions map[string]Permission `json:"user_permissions"`
+	ID          string    `json:"id"`
+	Role        Role      `json:"role"`
+	Name        string    `json:"name"`
+	Surname     string    `json:"surname"`
+	Email       string    `json:"email"`
+	PhoneNumber string    `json:"phone_number"`
+	Password    string    `json:"password"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 type Permission struct {

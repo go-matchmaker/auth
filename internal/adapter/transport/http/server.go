@@ -10,15 +10,9 @@ import (
 	"fmt"
 	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v3"
-	"github.com/gofiber/template/html/v2"
 	"go.uber.org/zap"
 	std_http "net/http"
 	"time"
-)
-
-const (
-	viewPath   = "../../internal/adapter/transport/http/web/views"
-	renderType = ".html"
 )
 
 var (
@@ -30,7 +24,6 @@ type (
 		ctx          context.Context
 		cfg          *config.Container
 		app          *fiber.App
-		cfgFiber     *fiber.Config
 		userService  user.UserServicePort
 		tokenService auth.TokenMaker
 	}
@@ -52,8 +45,6 @@ func NewHTTPServer(
 }
 
 func (s *server) Start(ctx context.Context) error {
-	engine := html.New(viewPath, renderType)
-
 	app := fiber.New(fiber.Config{
 		ReadTimeout:   time.Minute * time.Duration(s.cfg.Settings.ServerReadTimeout),
 		StrictRouting: false,
@@ -63,7 +54,6 @@ func (s *server) Start(ctx context.Context) error {
 		JSONDecoder:   json.Unmarshal,
 		AppName:       "Go-Gateway",
 		Immutable:     true,
-		Views:         engine,
 	})
 
 	s.app = app

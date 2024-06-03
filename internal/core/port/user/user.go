@@ -13,5 +13,5 @@ type UserRepositoryPort interface {
 
 type UserServicePort interface {
 	Login(ctx context.Context, email, password string) (*aggregate.UserAccess, error)
-	GetUser(ctx context.Context, id string) (*aggregate.UserAggregate, error)
+	GetUserByID(ctx context.Context, id string) (*aggregate.UserAggregate, error)
 }

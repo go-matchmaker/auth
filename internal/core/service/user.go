@@ -58,7 +58,7 @@ func (us *UserService) Login(ctx context.Context, email, password string) (*aggr
 	return sessionModel, nil
 }
 
-func (us *UserService) GetUser(ctx context.Context, id string) (*aggregate.UserAggregate, error) {
+func (us *UserService) GetUserByID(ctx context.Context, id string) (*aggregate.UserAggregate, error) {
 	userModel, err := us.userRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err

@@ -44,7 +44,7 @@ func (us *UserService) Login(ctx context.Context, email, password string) (*aggr
 	if err != nil {
 		return nil, err
 	}
-	accessToken, publicKey, accessPayload, err := us.token.CreateToken(userModel.User.ID, userModel.User.Name, userModel.User.Surname, userModel.User.Email, string(userModel.User.Role), userModel.User.PhoneNumber, userModel.Department.ID, userModel.User.CreatedAt, userModel.Permissions)
+	accessToken, publicKey, accessPayload, err := us.token.CreateToken(userModel.User.ID)
 	if err != nil {
 		return nil, err
 	}

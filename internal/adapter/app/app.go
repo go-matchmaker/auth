@@ -34,8 +34,8 @@ func New(
 		rw:          rw,
 		Cfg:         cfg,
 		HTTP:        http,
-		Token:       token,
 		PG:          pg,
+		Token:       token,
 		UserRepo:    userRepo,
 		UserService: userService,
 	}

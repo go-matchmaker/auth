@@ -44,9 +44,6 @@ func dbEngineFunc(
 		zap.S().Fatal("failed to start db:", err)
 	}
 
-	if err != nil {
-		zap.S().Fatal("failed to migrate db:", err)
-	}
 	return psqlDb, func() { psqlDb.Close(ctx) }, nil
 }
 

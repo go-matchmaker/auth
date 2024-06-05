@@ -17,7 +17,6 @@ type (
 		HTTP     *HTTP     `yaml:"http"`
 		Token    *Token    `yaml:"token"`
 		PSQL     *PSQL     `yaml:"psql"`
-		MONGO    *MONGO    `yaml:"mongo"`
 		Settings *Settings `yaml:"settings"`
 	}
 
@@ -42,12 +41,6 @@ type (
 	PSQL struct {
 		URL     string `env-required:"true" yaml:"url" env:"PSQL_URL"`
 		PoolMax int    `env-required:"true" yaml:"pool_max" env:"PSQL_POOL_MAX"`
-	}
-
-	MONGO struct {
-		URL            string `env-required:"true" yaml:"url" env:"MONGO_URL"`
-		DBName         string `env-required:"true" yaml:"db_name" env:"MONGO_DB_NAME"`
-		UserCollection string `env-required:"true" yaml:"user_collection" env:"MONGO_USER_COLLECTION"`
 	}
 
 	Settings struct {

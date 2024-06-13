@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  postgres:
+    restart: always
+    image: postgres:16.1-alpine3.19
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: crm
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - common-network
+
+  crm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: go-matcher
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+    networks:
+      - common-network
+
+networks:
+  common-network:
+    name: common-network
+    driver: bridge

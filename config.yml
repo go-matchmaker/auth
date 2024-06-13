@@ -1,0 +1,22 @@
+app:
+  name: "auth-service"
+
+log:
+  level: 2
+
+token:
+  token_ttl: 60m
+  refresh_ttl: 120m
+
+http:
+  host: "0.0.0.0"
+  port: 8001
+
+psql:
+  url: "postgres://postgres:pass@localhost:5432/crm?sslmode=disable&options=-c%20default_transaction_read_only=on"
+
+
+settings:
+  server_read_timeout: 5
+  db_conn_attempts: 5
+  db_conn_timeout: 2
